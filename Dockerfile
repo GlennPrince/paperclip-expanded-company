@@ -29,6 +29,9 @@ COPY --from=deps /app/ui/node_modules ./ui/node_modules
 COPY --from=deps /app/packages ./packages
 COPY . .
 RUN pnpm --filter @paperclipai/db generate
+RUN pnpm --filter @paperclipai/db build
+RUN pnpm --filter @paperclipai/shared build || true
+RUN pnpm --filter @paperclipai/adapter-utils build || true
 RUN pnpm --filter @paperclipai/ui build
 RUN pnpm --filter @paperclipai/server build
 RUN ls -la server/dist/ || echo "server/dist not found"
