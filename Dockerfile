@@ -19,17 +19,38 @@ RUN pnpm install --frozen-lockfile
 
 FROM base AS build
 WORKDIR /app
-COPY --from=deps /app /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/cli/node_modules ./cli/node_modules
+COPY --from=deps /app/server/node_modules ./server/node_modules
+COPY --from=deps /app/ui/node_modules ./ui/node_modules
+COPY --from=deps /app/packages ./packages
 COPY . .
-RUN pnpm --filter @paperclip/ui build
-RUN pnpm --filter @paperclip/server build
+RUN pnpm --filter @paperclipai/db generate
+RUN pnpm --filter @paperclipai/ui build
+RUN pnpm --filter @paperclipai/server build
+RUN ls -la server/dist/ || echo "server/dist not found"
 
-FROM base AS production
+FROM node:20-bookworm-slim AS production
 WORKDIR /app
-COPY --from=build /app /app
+# Copy built server
+COPY --from=build /app/server/dist ./server/dist
+COPY --from=build /app/server/node_modules ./server/node_modules
+COPY --from=build /app/server/package.json ./server/
+# Copy built UI
+COPY --from=build /app/ui/dist ./ui/dist
+COPY --from=build /app/ui/package.json ./ui/
+# Copy shared packages
+COPY --from=build /app/packages ./packages
+# Copy cli
+COPY --from=build /app/cli ./cli
+# Copy root node_modules for shared deps
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json ./
+COPY --from=build /app/pnpm-workspace.yaml ./
+COPY --from=build /app/pnpm-lock.yaml ./
+
 RUN npm install --global --omit=dev @anthropic-ai/claude-code@latest @openai/codex@latest
 
-# Railway volumes are configured via railway.toml, not VOLUME instruction
 ENV NODE_ENV=production \
   HOME=/paperclip \
   HOST=0.0.0.0 \
@@ -40,9 +61,8 @@ ENV NODE_ENV=production \
   PAPERCLIP_DEPLOYMENT_MODE=authenticated \
   PAPERCLIP_DEPLOYMENT_EXPOSURE=public
 
-# Create data directory for persistence
 RUN mkdir -p /paperclip/instances/default
 
 EXPOSE 3100
 
-CMD ["node", "--import", "./server/node_modules/tsx/dist/loader.mjs", "server/dist/index.js"]
+CMD ["node", "server/dist/index.js"]
