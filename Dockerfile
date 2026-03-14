@@ -36,6 +36,7 @@ RUN pnpm --filter @paperclipai/adapter-utils build || true
 RUN pnpm --filter @paperclipai/adapter-claude-local build || true
 RUN pnpm --filter @paperclipai/adapter-codex-local build || true
 RUN pnpm --filter @paperclipai/adapter-cursor-local build || true
+RUN pnpm --filter @paperclipai/adapter-gemini-local build || true
 RUN pnpm --filter @paperclipai/adapter-openclaw-gateway build || true
 RUN pnpm --filter @paperclipai/adapter-opencode-local build || true
 RUN pnpm --filter @paperclipai/adapter-pi-local build || true
