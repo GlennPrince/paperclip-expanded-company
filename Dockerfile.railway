@@ -11,8 +11,7 @@ WORKDIR /app
 # Copy everything first (simpler than trying to copy individual package.json files)
 COPY . .
 
-# Install dependencies (with devDependencies for tsx)
-ENV NODE_ENV=development
+# Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
 # Create user and set up directories
@@ -40,4 +39,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3100/api/health || exit 1
 
 # Use tsx to run TypeScript files directly
-CMD ["sh", "-c", "npx tsx packages/db/src/migrate.ts && npx tsx server/src/index.ts"]
+CMD ["npx", "tsx", "server/src/index.ts"]
