@@ -15,8 +15,8 @@ COPY . .
 RUN pnpm install --no-frozen-lockfile
 
 # Create user and set up directories
-RUN addgroup -g 1001 -S paperclip && \
-    adduser -S -D -H -u 1001 -s /sbin/nologin -G paperclip paperclip && \
+RUN groupadd -g 1001 paperclip && \
+    useradd -r -u 1001 -g paperclip -s /usr/sbin/nologin paperclip && \
     mkdir -p /paperclip/instances/default && \
     chown -R paperclip:paperclip /paperclip /app
 
